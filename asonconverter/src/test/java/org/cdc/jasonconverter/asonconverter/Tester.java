@@ -1,0 +1,41 @@
+package org.cdc.jasonconverter.asonconverter;
+
+import java.io.BufferedReader;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Scanner;
+import java.util.StringTokenizer;
+
+import org.json.JSONObject;
+
+import gov.cdc.ncezid.eip.services.transform.helper.HL7Helper;
+
+public class Tester {
+
+	public static void main(String args[]) {
+		try {
+			
+			String validMessage = "SFT|Mirth Corp.|2.0|Mirth Connect|789654||20110101" + 
+					"";
+			/*
+			HL7Helper helper = HL7Helper.getInstance();
+			helper.parseToJSON(validMessage);
+			*/
+			StringTokenizer toke = new StringTokenizer("");
+			String content = new Scanner(new File("C:\\Users\\kevin\\Desktop\\ClassWork\\CS3311\\Project Test Files\\2.5.1_GPS_Maxiumum Data Complex Microbiology.txt-revHEAD.svn000.tmp.txt")).useDelimiter("\\Z").next();
+			//String content = validMessage;
+			 System.out.println(content);
+			HL7Helper helper = HL7Helper.getInstance();
+			JSONObject object=helper.parseSingleMessageToJSON(content);
+			System.out.println(object);
+		} catch (IOException e) {
+			System.out.println("error thrown:" + e);
+		} catch (Exception e) {
+			System.out.println("error2 thrown:" + e);
+		}
+	}
+	
+	
+	 
+}
