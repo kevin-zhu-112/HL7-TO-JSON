@@ -103,7 +103,7 @@ public class HL7Helper {
                                                 // instantiate an XML parser
                                                 xmlParser = new DefaultXMLParser();// new parser is assigned to clean out the previous message as this is a static class
                                                 String xml = xmlParser.encode(msg);
-
+                                                System.out.println("XML is " + xml);
                                                 xmlJsonDataFormat = new XmlJsonDataFormat();
                                                 xmlJsonDataFormat.setEncoding("UTF-8");
                                                 xmlJsonDataFormat.setForceTopLevelObject(true);

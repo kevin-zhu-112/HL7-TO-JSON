@@ -22,8 +22,8 @@ public class Tester {
 			HL7Helper helper = HL7Helper.getInstance();
 			helper.parseToJSON(validMessage);
 			*/
-			StringTokenizer toke = new StringTokenizer("");
-			String content = new Scanner(new File("C:\\Users\\kevin\\Desktop\\ClassWork\\CS3311\\Project Test Files\\2.5.1_GPS_Maxiumum Data Complex Microbiology.txt-revHEAD.svn000.tmp.txt")).useDelimiter("\\Z").next();
+			StringTokenizer token = new StringTokenizer("");
+			String content = new Scanner(new File("./Project Test Files\\2.5.1_GPS_Maxiumum Data Complex Microbiology.txt-revHEAD.svn000.tmp.txt")).useDelimiter("\\Z").next();
 			//String content = validMessage;
 			 System.out.println(content);
 			HL7Helper helper = HL7Helper.getInstance();
