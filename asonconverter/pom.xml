@@ -127,6 +127,11 @@
         <artifactId>slf4j-simple</artifactId>
         <version>1.7.21</version> <!-- or use LATEST -->
     </dependency>
- 
+      <dependency>
+          <groupId>org.mongodb</groupId>
+          <artifactId>mongo-java-driver</artifactId>
+          <version>3.6.1</version>
+      </dependency>
+
   </dependencies>
 </project>
