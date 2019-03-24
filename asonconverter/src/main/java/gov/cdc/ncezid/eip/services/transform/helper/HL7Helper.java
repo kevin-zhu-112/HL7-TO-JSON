@@ -10,7 +10,6 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 import javax.xml.transform.Transformer;
@@ -20,16 +19,17 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import org.apache.camel.dataformat.xmljson.XmlJsonDataFormat;
 import org.apache.log4j.Logger;
+import org.bson.Document;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import com.jayway.jsonpath.JsonPath;
@@ -42,7 +42,6 @@ import ca.uhn.hl7v2.util.Hl7InputStreamMessageIterator;
 /*import gov.cdc.ncezid.eip.services.transform.exceptions.ServiceException;
 import gov.cdc.ncezid.eip.services.transform.model.TransformModel;
 */
-import ca.uhn.hl7v2.util.Hl7InputStreamMessageStringIterator;
 
 //@PropertySource("classpath:application.yml")
 //@ConfigurationProperties
@@ -52,6 +51,8 @@ public class HL7Helper {
                 private static final Logger logger = Logger.getLogger(HL7Helper.class);
                 
                 private static HL7Helper instance;
+
+                private static MongoClient mongoClient = new MongoClient("localhost", 27017);
                 
                 @Value("${version}")
                 private static String appVersion;
@@ -83,6 +84,7 @@ public class HL7Helper {
                     GenericParser parser = new GenericParser();
                     Message msg =parser.parse(message);
                     JSONObject json = HL7Helper.getInstance().parseToJSON(msg);
+                    saveToDatabase(json);
                     return json;
                 }
                 public JSONObject parseToJSON(String message) throws Exception {
@@ -135,7 +137,6 @@ public class HL7Helper {
                                                 extractor.put("hash", getMD5Hash(msg.toString()));
                                                 extractor.put("timestamp", Instant.now().toString());
                                                 obj.put("extractor", extractor);
-
                                                 return obj;
                                 } catch (Exception e) {
                                                 throw new Exception(e);
@@ -221,6 +222,7 @@ public class HL7Helper {
                                 }
                 }
 
+                /*
                 public String transform(Document xml) throws Exception {
                                 try {
                                                 return transform(new DOMSource(xml));
@@ -228,6 +230,7 @@ public class HL7Helper {
                                                 throw new Exception(e);
                                 }
                 }
+                */
 
                 private String transform(DOMSource source) throws TransformerFactoryConfigurationError, TransformerException {
                                 TransformerFactory tf = TransformerFactory.newInstance();
@@ -235,6 +238,13 @@ public class HL7Helper {
                                 StringWriter writer = new StringWriter();
                                 transformer.transform(source, new StreamResult(writer));
                                 return writer.getBuffer().toString();
+                }
+
+                private void saveToDatabase(JSONObject jsonObject) {
+                    MongoDatabase database = mongoClient.getDatabase("HL7");
+                    MongoCollection<Document> collection = database.getCollection("myHL7Collection");
+                    Document doc = Document.parse(jsonObject.toString());
+                    collection.insertOne(doc);
                 }
                 
                 

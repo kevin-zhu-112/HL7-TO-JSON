@@ -1,7 +1,5 @@
 package org.cdc.jasonconverter.asonconverter;
 
-import java.io.BufferedReader;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
@@ -9,10 +7,9 @@ import java.util.StringTokenizer;
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
+import gov.cdc.ncezid.eip.services.transform.helper.HL7Helper;
 import org.bson.Document;
 import org.json.JSONObject;
-
-import gov.cdc.ncezid.eip.services.transform.helper.HL7Helper;
 
 public class Tester {
 
