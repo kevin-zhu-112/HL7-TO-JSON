@@ -10,7 +10,6 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 import javax.xml.transform.Transformer;
@@ -20,29 +19,39 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import org.apache.camel.dataformat.xmljson.XmlJsonDataFormat;
 import org.apache.log4j.Logger;
+import org.bson.Document;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import com.jayway.jsonpath.JsonPath;
 
+import ca.uhn.hl7v2.DefaultHapiContext;
+import ca.uhn.hl7v2.HapiContext;
 import ca.uhn.hl7v2.model.Message;
+import ca.uhn.hl7v2.parser.CanonicalModelClassFactory;
+import ca.uhn.hl7v2.parser.CustomModelClassFactory;
+import ca.uhn.hl7v2.parser.DefaultModelClassFactory;
 import ca.uhn.hl7v2.parser.DefaultXMLParser;
+import ca.uhn.hl7v2.parser.GenericModelClassFactory;
 import ca.uhn.hl7v2.parser.GenericParser;
+import ca.uhn.hl7v2.parser.ModelClassFactory;
+import ca.uhn.hl7v2.parser.Parser;
+import ca.uhn.hl7v2.parser.PipeParser;
 import ca.uhn.hl7v2.parser.XMLParser;
 import ca.uhn.hl7v2.util.Hl7InputStreamMessageIterator;
+
 /*import gov.cdc.ncezid.eip.services.transform.exceptions.ServiceException;
 import gov.cdc.ncezid.eip.services.transform.model.TransformModel;
 */
-import ca.uhn.hl7v2.util.Hl7InputStreamMessageStringIterator;
 
 //@PropertySource("classpath:application.yml")
 //@ConfigurationProperties
@@ -52,6 +61,8 @@ public class HL7Helper {
                 private static final Logger logger = Logger.getLogger(HL7Helper.class);
                 
                 private static HL7Helper instance;
+
+                private static MongoClient mongoClient = new MongoClient("localhost", 27017);
                 
                 @Value("${version}")
                 private static String appVersion;
@@ -80,10 +91,21 @@ public class HL7Helper {
                 
                 public JSONObject parseSingleMessageToJSON(String message) throws Exception {
                    // ByteArrayInputStream is = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
-                    GenericParser parser = new GenericParser();
-                    Message msg =parser.parse(message);
-                    JSONObject json = HL7Helper.getInstance().parseToJSON(msg);
-                    return json;
+                	HapiContext context = new DefaultHapiContext();
+                	context.getParserConfiguration().setValidating(false);
+                	GenericParser parser = context.getGenericParser();
+
+                    try {
+                    	Message msg = parser.parse(message);
+                        JSONObject json = HL7Helper.getInstance().parseToJSON(msg);
+                        saveToDatabase(json);
+                        return json;
+                    } catch (Exception e) {
+                    	e.printStackTrace();
+                    	JSONObject json = null;
+                    	return json;
+                    }
+                    
                 }
                 public JSONObject parseToJSON(String message) throws Exception {
 
@@ -103,7 +125,6 @@ public class HL7Helper {
                                                 // instantiate an XML parser
                                                 xmlParser = new DefaultXMLParser();// new parser is assigned to clean out the previous message as this is a static class
                                                 String xml = xmlParser.encode(msg);
-                                                System.out.println("XML is " + xml);
                                                 xmlJsonDataFormat = new XmlJsonDataFormat();
                                                 xmlJsonDataFormat.setEncoding("UTF-8");
                                                 xmlJsonDataFormat.setForceTopLevelObject(true);
@@ -135,9 +156,9 @@ public class HL7Helper {
                                                 extractor.put("hash", getMD5Hash(msg.toString()));
                                                 extractor.put("timestamp", Instant.now().toString());
                                                 obj.put("extractor", extractor);
-
                                                 return obj;
                                 } catch (Exception e) {
+                                	e.printStackTrace();
                                                 throw new Exception(e);
                                 }
                 }
@@ -221,6 +242,7 @@ public class HL7Helper {
                                 }
                 }
 
+                /*
                 public String transform(Document xml) throws Exception {
                                 try {
                                                 return transform(new DOMSource(xml));
@@ -228,6 +250,7 @@ public class HL7Helper {
                                                 throw new Exception(e);
                                 }
                 }
+                */
 
                 private String transform(DOMSource source) throws TransformerFactoryConfigurationError, TransformerException {
                                 TransformerFactory tf = TransformerFactory.newInstance();
@@ -235,6 +258,14 @@ public class HL7Helper {
                                 StringWriter writer = new StringWriter();
                                 transformer.transform(source, new StreamResult(writer));
                                 return writer.getBuffer().toString();
+                }
+                
+                // Code to store at CDC's mongoDB instance
+                private void saveToDatabase(JSONObject jsonObject) {
+                    MongoDatabase database = mongoClient.getDatabase("HL7");
+                    MongoCollection<Document> collection = database.getCollection("myHL7Collection");
+                    Document doc = Document.parse(jsonObject.toString());
+                    collection.insertOne(doc);
                 }
                 
                 
