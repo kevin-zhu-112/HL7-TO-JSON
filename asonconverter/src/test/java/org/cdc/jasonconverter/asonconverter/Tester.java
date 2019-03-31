@@ -39,7 +39,6 @@ public class Tester {
 					Document doc = Document.parse(object.toString());
 					collection.insertOne(doc);
 					System.out.printf("Transferred file %d%n", i++);
-					break;
 				} else {
 					System.out.printf("File %d failed%n", i++);
 					break;
