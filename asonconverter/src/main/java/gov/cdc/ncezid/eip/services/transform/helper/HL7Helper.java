@@ -34,11 +34,21 @@ import org.w3c.dom.Element;
 
 import com.jayway.jsonpath.JsonPath;
 
+import ca.uhn.hl7v2.DefaultHapiContext;
+import ca.uhn.hl7v2.HapiContext;
 import ca.uhn.hl7v2.model.Message;
+import ca.uhn.hl7v2.parser.CanonicalModelClassFactory;
+import ca.uhn.hl7v2.parser.CustomModelClassFactory;
+import ca.uhn.hl7v2.parser.DefaultModelClassFactory;
 import ca.uhn.hl7v2.parser.DefaultXMLParser;
+import ca.uhn.hl7v2.parser.GenericModelClassFactory;
 import ca.uhn.hl7v2.parser.GenericParser;
+import ca.uhn.hl7v2.parser.ModelClassFactory;
+import ca.uhn.hl7v2.parser.Parser;
+import ca.uhn.hl7v2.parser.PipeParser;
 import ca.uhn.hl7v2.parser.XMLParser;
 import ca.uhn.hl7v2.util.Hl7InputStreamMessageIterator;
+
 /*import gov.cdc.ncezid.eip.services.transform.exceptions.ServiceException;
 import gov.cdc.ncezid.eip.services.transform.model.TransformModel;
 */
@@ -81,11 +91,21 @@ public class HL7Helper {
                 
                 public JSONObject parseSingleMessageToJSON(String message) throws Exception {
                    // ByteArrayInputStream is = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
-                    GenericParser parser = new GenericParser();
-                    Message msg =parser.parse(message);
-                    JSONObject json = HL7Helper.getInstance().parseToJSON(msg);
-                    saveToDatabase(json);
-                    return json;
+                	HapiContext context = new DefaultHapiContext();
+                	context.getParserConfiguration().setValidating(false);
+                	GenericParser parser = context.getGenericParser();
+
+                    try {
+                    	Message msg = parser.parse(message);
+                        JSONObject json = HL7Helper.getInstance().parseToJSON(msg);
+                        saveToDatabase(json);
+                        return json;
+                    } catch (Exception e) {
+                    	e.printStackTrace();
+                    	JSONObject json = null;
+                    	return json;
+                    }
+                    
                 }
                 public JSONObject parseToJSON(String message) throws Exception {
 
@@ -105,7 +125,6 @@ public class HL7Helper {
                                                 // instantiate an XML parser
                                                 xmlParser = new DefaultXMLParser();// new parser is assigned to clean out the previous message as this is a static class
                                                 String xml = xmlParser.encode(msg);
-                                                System.out.println("XML is " + xml);
                                                 xmlJsonDataFormat = new XmlJsonDataFormat();
                                                 xmlJsonDataFormat.setEncoding("UTF-8");
                                                 xmlJsonDataFormat.setForceTopLevelObject(true);
@@ -139,6 +158,7 @@ public class HL7Helper {
                                                 obj.put("extractor", extractor);
                                                 return obj;
                                 } catch (Exception e) {
+                                	e.printStackTrace();
                                                 throw new Exception(e);
                                 }
                 }
@@ -239,7 +259,8 @@ public class HL7Helper {
                                 transformer.transform(source, new StreamResult(writer));
                                 return writer.getBuffer().toString();
                 }
-
+                
+                // Code to store at CDC's mongoDB instance
                 private void saveToDatabase(JSONObject jsonObject) {
                     MongoDatabase database = mongoClient.getDatabase("HL7");
                     MongoCollection<Document> collection = database.getCollection("myHL7Collection");
