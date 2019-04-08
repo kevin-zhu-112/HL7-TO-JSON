@@ -21,6 +21,7 @@ import javax.json.JsonArrayBuilder;
 @RestController
 @RequestMapping("hl7")
 public class HL7Controller {
+    int a = 0;
     HL7Helper hl7Helper = HL7Helper.getInstance();
 
     private static MongoClient mongoClient = new MongoClient("localhost", 27017);
