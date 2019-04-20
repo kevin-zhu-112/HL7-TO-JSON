@@ -1,29 +1,22 @@
-# HL7-TO-JSON
 # Release Notes HL7-to-JSON v1.0
 
 # NEW FEATURES
-# HL7 to JSON Converter:
+HL7 to JSON Converter:
 Now compatible with HL7 v2.3.1 and v2.3
 Converter works on an entire folder of HL7 files instead of on a single file
 Queries can be implemented on the database
-# UI: 
+UI: 
 Settings page implemented in the UI
 Print from the UI
 Export files from the UI
 
-# BUG FIXES
+BUG FIXES
 Reading data from MongoDB no longer causes the records table to crash the UI
 Fixed HL7 version dependency issues in the converter
 
-# KNOWN BUGS
+KNOWN BUGS
 UNKNOWN keys appear in JSON files for HL7 2.3.1 files
 Exported/printed files from the UI not formatted properly
-
-
-# Release Notes
-For other HL7 versions besides this and v2.5, go to https://mvnrepository.com/artifact/ca.uhn.hapi and copy and paste the maven dependency for that specific version to the maven dependencies file in Eclipse. 
-Currently, our converter connects to a MongoDB instance at localhost:27027 to a database called CDC and a collection called HL7Repository. Modify the databaseConnect method in HL7Helper to point to the appropriate MongoDB instance. 
-
 
 # Install Guide
 PREREQUISITES/DEPENDENCIES:
@@ -49,7 +42,7 @@ RUNNING APPLICATION
 Run the UI by running npm run electron from the command line
 Run the converter by running Tester.java in the IDE. 
 
-Troubleshooting
+# Troubleshooting
 For converting other HL7 versions besides v2.3.1 and 2.5 go to https://mvnrepository.com/artifact/ca.uhn.hapi and copy/paste the maven dependency for that specific version to the maven dependencies file in eclipse.
 The Current converter connects to a MongoDB instance at localhost:27027 to a database called HL7 and a collection called myHL7Repository. Modify the databaseConnect method in  HL7Helper.java to point to the appropriate MongoDB instance
 If the UI fails to run, run npm install from the command line before trying to run the UI.
