@@ -37,12 +37,11 @@ public class Tester {
 					// Insert to local db instance
 					Document doc = Document.parse(object.toString());
 					collection.insertOne(doc);
-					System.out.printf("Transferred file %d%n", i++);
+					System.out.printf("Transferred file %d%n", i);
 				} else {
-					System.out.printf("File %d failed%n", i++);
+					System.out.printf("File %d failed%n", i);
 					break;
 				}
-				
 			}
 			
 			System.out.println("Files transferred successfully");
