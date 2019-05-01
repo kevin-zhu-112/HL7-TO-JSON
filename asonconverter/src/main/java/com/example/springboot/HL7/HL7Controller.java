@@ -17,16 +17,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.regex.Pattern;
 
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
+import javax.validation.constraints.NotNull;
 
 @RestController
 @RequestMapping("hl7")
 public class HL7Controller {
-    String key = "message.HL7.source.ORU_R01.ORU_R01-PIDPD1NK1NTEPV1PV2ORCOBRNTEOBXNTECTI.ORU_R01-PIDPD1NK1NTEPV1PV2.PID.PID-8";
-    String value = "F";
     HL7Helper hl7Helper = HL7Helper.getInstance();
 
     private static MongoClient mongoClient = new MongoClient("localhost", 27017);
@@ -42,39 +44,72 @@ public class HL7Controller {
     }
 
     @RequestMapping(value = "/get", method = RequestMethod.GET)
-    public JsonArray getAllHL7() {
+    public String getAllHL7() {
         MongoDatabase database = mongoClient.getDatabase("HL7");
         MongoCollection<Document> collection = database.getCollection("myHL7Collection");
         MongoCursor<Document> cursor = collection.find().iterator();
-        JsonArrayBuilder builder = Json.createArrayBuilder();
+        String builder = "";
+        Random rand = new Random();
+        int i = 0;
         try {
-            while (cursor.hasNext()) {
-                builder.add(cursor.next().toJson());
+            while (cursor.hasNext() && i<1) {
+            	if (rand.nextInt(100) < 5) {
+            		builder = cursor.next().toJson();
+                    i++;
+            	} else {
+            		cursor.next();
+            	}
             }
 
         } finally {
             cursor.close();
         }
-        return builder.build();
+        return builder;
     }
     
-    @RequestMapping(value = "/query", method = RequestMethod.GET)
-    public long queryHL7() {
+    @RequestMapping(value = "/get1", method = RequestMethod.GET)
+    public String getOneHL7() {
         MongoDatabase database = mongoClient.getDatabase("HL7");
         MongoCollection<Document> collection = database.getCollection("myHL7Collection");
-        Bson filter = Filters.eq("message.HL7.source.ORU_R01.ORU_R01-PIDPD1NK1NTEPV1PV2ORCOBRNTEOBXNTECTI.ORU_R01-PIDPD1NK1NTEPV1PV2.PID.PID-8", "F");
+        MongoCursor<Document> cursor = collection.find().iterator();
+        String builder = "";
+        Random rand = new Random();
+        int i = 0;
+        try {
+            while (cursor.hasNext() && i<1) {
+            	if (rand.nextInt(100) < 5) {
+            		builder = cursor.next().toJson();
+                    i++;
+            	} else {
+            		builder = cursor.next().toJson();
+            	}
+                
+            }
+
+        } finally {
+            cursor.close();
+        }
+        return builder;
+    }
+    
+    @RequestMapping(value = "/query", method = RequestMethod.POST)
+    public long queryHL7(@RequestBody KeyValue params) {
+        MongoDatabase database = mongoClient.getDatabase("HL7");
+        MongoCollection<Document> collection = database.getCollection("myHL7Collection");
+        Pattern regex = Pattern.compile(params.value, Pattern.CASE_INSENSITIVE);
+        Bson filter = Filters.eq(params.key, regex);
         long cursor = collection.count(filter);
         return cursor;
     }
-
-    @RequestMapping(value = "/search", method = RequestMethod.GET)
-    public int searchHL7() {
-        MongoDatabase database = mongoClient.getDatabase("HL7");
+    
+    @RequestMapping(value = "/search", method = RequestMethod.POST)
+    public int setSearch(@RequestBody String searchString) {
+    	MongoDatabase database = mongoClient.getDatabase("HL7");
         MongoCollection<Document> collection = database.getCollection("myHL7Collection");
         int count = 0;
         MongoCursor<Document> cursor = null;
         try {
-            cursor = collection.find(new Document("$text", new Document("$search", "\"Hepatitis A\"").append("$caseSensitive", new Boolean(false)).append("$diacriticSensitive", new Boolean(false)))).iterator();
+            cursor = collection.find(new Document("$text", new Document("$search", "\"" + searchString + "\"").append("$caseSensitive", new Boolean(false)).append("$diacriticSensitive", new Boolean(false)))).iterator();
  
             while (cursor.hasNext()) {
                 cursor.next();
@@ -85,9 +120,24 @@ public class HL7Controller {
  
         } catch (Exception e) {
             e.printStackTrace();
+            return -1;
         } finally {
         	cursor.close();
         }
         return count;
+    }
+}
+
+class KeyValue {
+	@NotNull
+	public String key;
+	@NotNull
+    public String value;
+	
+	public KeyValue() {}
+	
+    public KeyValue(String key, String value) {
+        this.key = key;
+        this.value = value;
     }
 }

@@ -250,8 +250,8 @@ public class HL7Helper {
                 }
 
                 private void saveToDatabase(JSONObject jsonObject) {
-                    MongoDatabase database = mongoClient.getDatabase("HL7");
-                    MongoCollection<Document> collection = database.getCollection("myHL7Collection");
+                    MongoDatabase database = mongoClient.getDatabase("Expo");
+                    MongoCollection<Document> collection = database.getCollection("Demo");
                     Document doc = Document.parse(jsonObject.toString());
                     collection.insertOne(doc);
                 }
