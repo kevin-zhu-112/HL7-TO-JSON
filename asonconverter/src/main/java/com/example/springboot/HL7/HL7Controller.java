@@ -33,6 +33,7 @@ public class HL7Controller {
 
     private static MongoClient mongoClient = new MongoClient("localhost", 27017);
 
+    // Adds a document to the collection
     @RequestMapping(value = "/add", method = RequestMethod.PUT)
     public ResponseEntity addHL7(@RequestBody String hl7String) {
         try {
@@ -43,30 +44,30 @@ public class HL7Controller {
         return ResponseEntity.status(HttpStatus.OK).body("Create user successfully");
     }
 
+    /**
+    * This method gets every JSON file in the collection, but this is not scalable
+    */
     @RequestMapping(value = "/get", method = RequestMethod.GET)
-    public String getAllHL7() {
+    public JsonArray getAllHL7() {
         MongoDatabase database = mongoClient.getDatabase("HL7");
         MongoCollection<Document> collection = database.getCollection("myHL7Collection");
         MongoCursor<Document> cursor = collection.find().iterator();
-        String builder = "";
-        Random rand = new Random();
-        int i = 0;
+        JsonArrayBuilder builder = Json.createArrayBuilder();
         try {
-            while (cursor.hasNext() && i<1) {
-            	if (rand.nextInt(100) < 5) {
-            		builder = cursor.next().toJson();
-                    i++;
-            	} else {
-            		cursor.next();
-            	}
+            while (cursor.hasNext()) {
+                builder.add(cursor.next().toJson());
             }
 
         } finally {
             cursor.close();
         }
-        return builder;
+        return builder.build();
     }
-    
+
+
+    /**
+    * This method returns a single JSON document chosen at pseudo-random
+    */
     @RequestMapping(value = "/get1", method = RequestMethod.GET)
     public String getOneHL7() {
         MongoDatabase database = mongoClient.getDatabase("HL7");
@@ -77,13 +78,13 @@ public class HL7Controller {
         int i = 0;
         try {
             while (cursor.hasNext() && i<1) {
-            	if (rand.nextInt(100) < 5) {
+            	if (rand.nextInt(500) < 20) {
             		builder = cursor.next().toJson();
                     i++;
             	} else {
             		builder = cursor.next().toJson();
             	}
-                
+
             }
 
         } finally {
@@ -91,7 +92,11 @@ public class HL7Controller {
         }
         return builder;
     }
-    
+
+    /**
+    * This method returns the number of documents containing a specified certain key-value pair
+    * For Example:      PID-8 : M
+    */
     @RequestMapping(value = "/query", method = RequestMethod.POST)
     public long queryHL7(@RequestBody KeyValue params) {
         MongoDatabase database = mongoClient.getDatabase("HL7");
@@ -101,7 +106,12 @@ public class HL7Controller {
         long cursor = collection.count(filter);
         return cursor;
     }
-    
+
+    /**
+    * This method returns the number of documents containing a specified string
+    * The search query searches for only a single string, but it searches for the entire string, including whitespace
+    * For example: Searching for "Dengue Fever" means the query searches for "Dengue Fever", not "Dengue" or "Fever"
+    */
     @RequestMapping(value = "/search", method = RequestMethod.POST)
     public int setSearch(@RequestBody String searchString) {
     	MongoDatabase database = mongoClient.getDatabase("HL7");
@@ -110,14 +120,14 @@ public class HL7Controller {
         MongoCursor<Document> cursor = null;
         try {
             cursor = collection.find(new Document("$text", new Document("$search", "\"" + searchString + "\"").append("$caseSensitive", new Boolean(false)).append("$diacriticSensitive", new Boolean(false)))).iterator();
- 
+
             while (cursor.hasNext()) {
                 cursor.next();
                 count++;
             }
- 
+
             cursor.close();
- 
+
         } catch (Exception e) {
             e.printStackTrace();
             return -1;
@@ -133,9 +143,9 @@ class KeyValue {
 	public String key;
 	@NotNull
     public String value;
-	
+
 	public KeyValue() {}
-	
+
     public KeyValue(String key, String value) {
         this.key = key;
         this.value = value;

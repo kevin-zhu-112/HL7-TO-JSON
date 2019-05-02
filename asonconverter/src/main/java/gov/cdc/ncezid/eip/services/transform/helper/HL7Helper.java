@@ -49,38 +49,38 @@ import gov.cdc.ncezid.eip.services.transform.model.TransformModel;
 //@ConfigurationProperties
 @Component
 public class HL7Helper {
-                
+
                 private static final Logger logger = Logger.getLogger(HL7Helper.class);
-                
+
                 private static HL7Helper instance;
 
                 private static MongoClient mongoClient = new MongoClient("localhost", 27017);
-                
+
                 @Value("${version}")
                 private static String appVersion;
-                
-                
-                   
 
-                
+
+
+
+
 
                 private XMLParser xmlParser = new DefaultXMLParser();
                 XmlJsonDataFormat xmlJsonDataFormat = new XmlJsonDataFormat();
-                
+
                 private HL7Helper(@Value("${version}") String version) {
                                 this.appVersion = version;
-                
+
                                 instance = this;
                 }
-                
-                
+
+
                 public static HL7Helper getInstance() {
                                 if( instance == null) {
                                                 return new HL7Helper(appVersion);
                                 }
                                 return instance;
                 }
-                
+
                 public JSONObject parseSingleMessageToJSON(String message) throws Exception {
                 	HapiContext context = new DefaultHapiContext();
                 	context.getParserConfiguration().setValidating(false);
@@ -151,8 +151,8 @@ public class HL7Helper {
                                                 throw new Exception(e);
                                 }
                 }
-                
-                
+
+
                 private Object parseJsonPath(JSONObject jsonObject, String jsonPath) {
                                 Object obj = null;
                                 try {
@@ -200,7 +200,7 @@ public class HL7Helper {
                                 }
                 }
 
-                
+
 
                 public String getMD5Hash(String msg) throws Exception {
                                 MessageDigest md;
@@ -249,14 +249,18 @@ public class HL7Helper {
                                 return writer.getBuffer().toString();
                 }
 
+                /*
+                * This method takes a JSONObject and stores it into the specified MongoDB database and collection
+                *
+                */
                 private void saveToDatabase(JSONObject jsonObject) {
-                    MongoDatabase database = mongoClient.getDatabase("Expo");
-                    MongoCollection<Document> collection = database.getCollection("Demo");
+                    MongoDatabase database = mongoClient.getDatabase("HL7");
+                    MongoCollection<Document> collection = database.getCollection("MyHL7Collection");
                     Document doc = Document.parse(jsonObject.toString());
                     collection.insertOne(doc);
                 }
-                
-                
+
+
 }
 
 
