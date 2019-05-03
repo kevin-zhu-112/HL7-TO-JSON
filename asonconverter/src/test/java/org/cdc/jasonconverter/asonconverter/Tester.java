@@ -21,12 +21,9 @@ public class Tester {
 			File folder = new File("./Project Test Files/Test Files");
 			HL7Helper helper = HL7Helper.getInstance();
 			File[] files = folder.listFiles();
-			
-			Random rand = new Random();
-			int x = rand.nextInt(5990);
-			int j = x + 10;
-			for (int i = x; i < j; i++) {
-				Scanner scan = new Scanner(files[i]);
+			int i = 0;
+			for (File file: files) {
+				Scanner scan = new Scanner(file);
 				String content = scan.useDelimiter("\\Z").next();
 				JSONObject object=helper.parseSingleMessageToJSON(content);
 				
@@ -37,6 +34,7 @@ public class Tester {
 					System.out.printf("File %d failed%n", i);
 					break;
 				}
+				i++;
 				scan.close();
 			}
 			/*

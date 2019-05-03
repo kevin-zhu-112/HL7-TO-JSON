@@ -132,7 +132,7 @@ public class HL7Controller {
             e.printStackTrace();
             return -1;
         } finally {
-        	cursor.close();
+
         }
         return count;
     }
